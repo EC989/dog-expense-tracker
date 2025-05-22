@@ -2,6 +2,7 @@ import streamlit as st
 from supabase import create_client, Client
 import datetime
 import uuid
+import calendar
 
 # ✅ Supabase 設定
 SUPABASE_URL = "https://tswddsttzsjavmtrcjmv.supabase.co"
@@ -82,7 +83,7 @@ if user_email:
     else:
         st.info("尚無疾病紀錄")
 
-    # 💸 新增花費（保留）
+    # 💸 新增花費
     st.subheader("💸 新增花費紀錄")
     exp_date = st.date_input("花費日期", datetime.date.today())
     exp_item = st.text_input("項目")
@@ -101,16 +102,21 @@ if user_email:
         else:
             st.warning("請輸入項目名稱")
 
-    # 📊 本月花費總覽（保留顯示，但無刪除按鈕）
-    st.subheader("📊 當月花費總覽")
-    today = datetime.date.today()
-    first_day = today.replace(day=1)
-    expenses_resp = supabase.table("dog_expenses").select("*").eq("user_id", user_id).gte("date", str(first_day)).lte("date", str(today)).execute()
+    # 📊 選擇月份花費總覽（修改重點）
+    st.subheader("📊 選擇月份查看花費總覽")
+    selected_month = st.date_input("選擇月份", datetime.date.today().replace(day=1))
+
+    year = selected_month.year
+    month = selected_month.month
+    first_day = datetime.date(year, month, 1)
+    last_day = datetime.date(year, month, calendar.monthrange(year, month)[1])
+
+    expenses_resp = supabase.table("dog_expenses").select("*").eq("user_id", user_id).gte("date", str(first_day)).lte("date", str(last_day)).execute()
     monthly_expenses = expenses_resp.data
 
     if monthly_expenses:
         total = sum(item["amount"] for item in monthly_expenses)
-        st.metric("💰 本月總花費", f"${total:.2f}")
+        st.metric(f"💰 {year}年{month}月總花費", f"${total:.2f}")
 
         for expense in monthly_expenses:
             col1, col2, col3 = st.columns([2, 4, 2])
@@ -120,10 +126,8 @@ if user_email:
                 st.write(expense["item"])
             with col3:
                 st.write(f"${expense['amount']:.2f}")
-            # 移除刪除按鈕，避免錯誤及刪除功能
-
     else:
-        st.info("📭 本月尚無花費紀錄")
+        st.info(f"📭 {year}年{month}月尚無花費紀錄")
 
 else:
     st.warning("請輸入並登入 Email 以使用應用程式功能")
