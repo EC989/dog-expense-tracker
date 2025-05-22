@@ -82,7 +82,7 @@ if user_email:
     else:
         st.info("尚無疾病紀錄")
 
-    # 💸 新增花費
+    # 💸 新增花費（保留）
     st.subheader("💸 新增花費紀錄")
     exp_date = st.date_input("花費日期", datetime.date.today())
     exp_item = st.text_input("項目")
@@ -98,12 +98,11 @@ if user_email:
             }
             supabase.table("dog_expenses").insert(expense_data).execute()
             st.success("✅ 已儲存花費紀錄")
-            st.session_state["refresh"] = True  # 手動觸發重載
         else:
             st.warning("請輸入項目名稱")
 
-    # 📊 本月花費總覽
-    st.subheader("📊 當月花費總覽與管理")
+    # 📊 本月花費總覽（保留顯示，但無刪除按鈕）
+    st.subheader("📊 當月花費總覽")
     today = datetime.date.today()
     first_day = today.replace(day=1)
     expenses_resp = supabase.table("dog_expenses").select("*").eq("user_id", user_id).gte("date", str(first_day)).lte("date", str(today)).execute()
@@ -114,25 +113,17 @@ if user_email:
         st.metric("💰 本月總花費", f"${total:.2f}")
 
         for expense in monthly_expenses:
-            col1, col2, col3, col4 = st.columns([2, 3, 2, 1])
+            col1, col2, col3 = st.columns([2, 4, 2])
             with col1:
                 st.write(expense["date"])
             with col2:
                 st.write(expense["item"])
             with col3:
                 st.write(f"${expense['amount']:.2f}")
-            with col4:
-                if st.button("刪除", key=f"del-{expense['id']}"):
-                    supabase.table("dog_expenses").delete().eq("id", expense["id"]).execute()
-                    st.success("✅ 已刪除紀錄")
-                    st.session_state["refresh"] = True  # 手動觸發重載
+            # 移除刪除按鈕，避免錯誤及刪除功能
 
     else:
         st.info("📭 本月尚無花費紀錄")
 
-    # 🔁 觸發頁面刷新（避免使用 experimental_rerun）
-    if "refresh" in st.session_state and st.session_state["refresh"]:
-        st.session_state["refresh"] = False
-        st.experimental_set_query_params(_=str(uuid.uuid4()))  # 模擬 URL 變動來強制刷新
 else:
     st.warning("請輸入並登入 Email 以使用應用程式功能")
