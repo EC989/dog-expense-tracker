@@ -13,7 +13,7 @@ st.set_page_config(page_title="🐶 狗狗健康與花費記錄")
 st.title("🐾 狗狗健康與花費記錄")
 
 # 🧑 使用者登入
-user_email = st.text_input("請輸入您的 Email")
+user_email = st.text_input("請輸入您的 Email 或帳號名稱（請自行保密）")
 user_id = None
 
 def get_or_create_user(email):
@@ -130,4 +130,4 @@ if user_email:
         st.info(f"📭 {year}年{month}月尚無花費紀錄")
 
 else:
-    st.warning("請輸入並登入 Email 以使用應用程式功能")
+    st.warning("請輸入並登入 Email 或帳號名稱以使用應用程式功能")
